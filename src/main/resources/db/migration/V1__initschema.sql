@@ -1,7 +1,7 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 
 CREATE TABLE IF NOT EXISTS organization (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL UNIQUE,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     storage_quota_bytes BIGINT NOT NULL DEFAULT 10737418240,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS organization (
 CREATE TYPE user_role AS ENUM ('ADMIN', 'READER' , 'WRITER');
 
 CREATE TABLE IF NOT EXISTS user (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 CREATE TABLE IF NOT EXISTS membership (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organization(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES user(id) ON DELETE CASCADE,
     role user_role NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS membership (
 );
 
 CREATE TABLE IF NOT EXISTS file_metadata (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organization(id) ON DELETE CASCADE,
     uploaded_by_id UUID NOT NULL REFERENCES user(id) ON DELETE CASCADE,
     storage_key VARCHAR(1024) NOT NULL UNIQUE,
