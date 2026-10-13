@@ -2,6 +2,7 @@ package com.codex.filestorage.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.Id;
 
 import java.util.UUID;
 import jakarta.persistence.GeneratedValue;
@@ -10,17 +11,21 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.OffsetDateTime;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 @Entity 
 @Table(name = "file_metadata")
-@Builder 
+@Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor 
 public class FileMetaData {
     
-    @Column(name = "id")
+    @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
@@ -56,19 +61,19 @@ public class FileMetaData {
     private Boolean deleted = false;
 
     @Column(name = "created_at" , updatable = false)
-    private String createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    private String updatedAt;
+    private OffsetDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = OffsetDateTime.now().toString());
-        updatedAt = OffsetDateTime.now().toString();
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 
     @PreUpdate 
     public void onUpdate() {
-        updatedAt = OffsetDateTime.now().toString();
+        updatedAt = OffsetDateTime.now();
     }
 }   
