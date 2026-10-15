@@ -35,12 +35,14 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	//lombok
-	dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
-}
+
+	//minio
+	implementation 'io.minio:minio:9.0.3'
+
 }
 
 tasks.named('test') {
