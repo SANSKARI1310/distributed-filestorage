@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity 
-@Table (name = "storage_usage")
+@Table (name = "storage_data")
 @Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class StorageUsage {
     
@@ -21,19 +21,22 @@ public class StorageUsage {
 
     @Column(name = "used_bytes" , nullable = false)
     @Builder.Default
-    private Long usedBytes =0L;    @PreUpdate 
-    public void onUpdate() {
-        updatedAt = OffsetDateTime.now();
-    }
+    private Long usedBytes =0L;
 
+    
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    @PrePersist 
-    @PreUpdate
-    protected void onTouch() {
+    @PrePersist
+    protected void onCreate() {
         updatedAt = OffsetDateTime.now();
     }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = OffsetDateTime.now();
+    }
+
 
 }

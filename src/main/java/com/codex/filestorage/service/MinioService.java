@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.Http.Method;
+import io.minio.RemoveObjectArgs;
 
 
 @Service
@@ -58,6 +59,23 @@ public class MinioService {
                     log.error("Error generating download url for key {}", storageKey, e);
                     throw new RuntimeException("Could not generate presigned URl", e);
                 }
+            }
+        }
+
+        public void deleteFile(String storageKey) {
+            try
+            {
+                minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                    .bucket(minioProperties.getBucketName())
+                    .object(storageKey)
+                    .build()
+                );
+            }
+            catch (Exception e)
+            {
+                log.error("Failed to delete file {}", storageKey, e);
+                throw new RuntimeException("Failed to delete file", e);
             }
         }
     

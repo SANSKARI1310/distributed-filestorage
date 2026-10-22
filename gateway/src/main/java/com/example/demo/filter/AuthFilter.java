@@ -2,34 +2,38 @@ package com.example.demo.filter;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
-
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
+import org.springframework.core.Ordered;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j 
 @Component 
 public class AuthFilter implements Ordered, GlobalFilter {
     
-    private static final String MOCK_ORG_ID = "00000000-0000-0000-0000-000000000001";
-    private static final String MOCK_USER_ID = "00000000-0000-0000-0000-000000000002";
-
     @Override 
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) 
-        {
-            log.info("Incoming request {} {}" ,exchange.getRequest().getMethod(), exchange.getRequest().getURI());
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // Read the headers sent by the client (or k6 script)
+        String orgId = exchange.getRequest().getHeaders().getFirst("X-Organization-Id");
+        String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
 
-            ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-            .header("X-Organization;-Id", MOCK_ORG_ID)
-            .header("X-User;-Id", MOCK_USER_ID)
-            .build();
-
-            return chain.filter(exchange.mutate().request(modifiedRequest).build())
-            .then(Mono.fromRunnable(() -> log.info("Outgoing response {} {}" ,exchange.getResponse().getStatusCode(), exchange.getResponse().getStatusText())));
+        // Simulate JWT Validation: Reject requests missing identity claims
+        if (orgId == null || userId == null) {
+            log.warn("Unauthorized request: Missing identity headers");
+            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
         }
+
+        log.info("Authenticated request for Org: {}, User: {}", orgId, userId);
+
+        // The headers are valid, pass the request downstream to the core backend
+        return chain.filter(exchange);
+    }
     
     @Override 
     public int getOrder() {
-        // sets priority as first here
         return -1;
     }
 }

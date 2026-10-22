@@ -16,4 +16,10 @@ public interface StorageUsageRepository extends JpaRepository<StorageUsage, UUID
        "UPDATE StorageUsage s SET s.usedBytes = s.usedBytes + :bytes WHERE s.organizationId = :orgId"
     )
     int incrementUsage(@Param("orgId") UUID orgId, @Param("bytes") long bytes);
-}
+
+    @Modifying
+    @Query(
+        "UPDATE StorageUsage s SET s.usedBytes = GREATEST(0, s.usedBytes - :bytes) WHERE s.organizationId = :orgId"
+    )
+    int decrementUsage(@Param("orgId") UUID orgId, @Param("bytes") long bytes);
+}   

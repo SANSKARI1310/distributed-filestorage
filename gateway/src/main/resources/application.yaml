@@ -7,6 +7,22 @@ spring:
     gateway:
       routes:
         - id: file-core-service
-          uri: http://localhost:8081
+          uri: lb://core-file-service
           predicates:
             - Path=/api/v1/files/**
+    discovery:
+      client:
+        simple:
+          instances:
+            core-file-service:
+              - uri: http://localhost:8081
+              - uri: http://localhost:8082
+
+  logging:
+  file:
+    name: logs/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB       # Rotate the log file when it reaches 10MB
+      max-history: 7            # Keep 7 days of historical logs
+      total-size-cap: 100MB     # Delete oldest logs if the total folder size exceeds 100MB

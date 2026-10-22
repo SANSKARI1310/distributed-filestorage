@@ -25,7 +25,7 @@ import jakarta.persistence.GenerationType;
 
 
 @Entity
-@Table(name = "memberships", uniqueConstraints = {
+@Table(name = "membership", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "organization_id"})
 })
 @Builder @Getter @Setter @NoArgsConstructor @AllArgsConstructor

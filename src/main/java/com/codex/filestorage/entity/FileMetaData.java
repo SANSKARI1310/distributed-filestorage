@@ -58,7 +58,7 @@ public class FileMetaData {
 
     @Column(name = "deleted", nullable = false)
     @Builder.Default
-    private Boolean deleted = false;
+    private Boolean isDeleted = false;
 
     @Column(name = "created_at" , updatable = false)
     private OffsetDateTime createdAt;
