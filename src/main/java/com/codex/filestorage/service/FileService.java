@@ -36,7 +36,7 @@ public class FileService {
     private final ApplicationEventPublisher eventPublisher;
     
     private Membership validateMembership(UUID organizationId, UUID userId , UserRole requiredRole) {
-        Membership membership = membershipRepository.findByUserIdAndOrganizationId(userId, organizationId)
+        Membership membership = membershipRepository.findByOrganizationId_IdAndUserId_Id(organizationId, userId)
             .orElseThrow(() -> new RuntimeException("User not a member of organization"));
         
         if(requiredRole == UserRole.ADMIN && membership.getRole() != UserRole.ADMIN) {

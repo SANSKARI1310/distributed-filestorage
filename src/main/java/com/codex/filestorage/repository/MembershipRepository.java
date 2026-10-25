@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository 
 public interface MembershipRepository extends JpaRepository<Membership, UUID> {
-    List<Membership> findAllByUserId(UUID userId);
-    Optional<Membership> findByUserIdAndOrganizationId(UUID userId, UUID organizationId);
+    List<Membership> findAllByUserId_Id(UUID userId);
+    Optional<Membership> findByOrganizationId_IdAndUserId_Id(UUID organizationId , UUID userId);
 }

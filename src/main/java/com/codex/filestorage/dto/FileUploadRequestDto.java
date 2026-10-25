@@ -3,7 +3,7 @@ package com.codex.filestorage.dto;
 public record FileUploadRequestDto
 (
     String fileName,
-    long fileSize,
+    Long fileSize,
     String mimeType,
     String checkSumSha256
 ) {

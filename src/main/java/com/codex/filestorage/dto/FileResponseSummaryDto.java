@@ -6,7 +6,7 @@ import java.util.UUID;
 public record FileResponseSummaryDto(
     UUID fileId,
     String fileName,
-    long fileSize,
+    Long fileSize,
     String mimeType,
     String checksumSha256,
     OffsetDateTime createdAt
