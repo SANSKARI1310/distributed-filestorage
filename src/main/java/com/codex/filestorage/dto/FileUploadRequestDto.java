@@ -5,7 +5,7 @@ public record FileUploadRequestDto
     String fileName,
     Long fileSize,
     String mimeType,
-    String checkSumSha256
+    String checksumSha256
 ) {
     
 }

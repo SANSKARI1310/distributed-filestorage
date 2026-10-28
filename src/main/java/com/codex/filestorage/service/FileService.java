@@ -28,8 +28,6 @@ import java.util.UUID;
 public class FileService {
     
     private final MinioService minioService;
-    private final UserRepository userRepository;
-    private final OrganizationRepository organizationRepository;
     private final StorageUsageRepository storageUsageRepository;
     private final FileMetadataRepository fileMetaDataRepository;
     private final MembershipRepository membershipRepository;
@@ -67,21 +65,19 @@ public class FileService {
             );
             storageUsageRepository.incrementUsage(organizationId, request.fileSize());
 
-            UUID fileId = UUID.randomUUID();
-            String storageKey = organizationId.toString() + "/" + fileId.toString();
+            String storageKey = organizationId + "/" + UUID.randomUUID();
             
             FileMetaData fileMetaData = FileMetaData.builder()
-                .id(fileId)
                 .organizationId(org)
                 .uploadedById(user)
                 .storageKey(storageKey)
                 .fileName(request.fileName())
                 .fileSize(request.fileSize())
                 .mimeType(request.mimeType())
-                .checksumSha256(request.checkSumSha256())
+                .checksumSha256(request.checksumSha256())
                 .build();
-            fileMetaDataRepository.save(fileMetaData);
-
+            FileMetaData saved=  fileMetaDataRepository.save(fileMetaData);
+            UUID fileId = saved.getId();
             String presignedUrl = minioService.generatePresignedUrl(storageKey);
             return new FileUploadResponseDto(fileId , presignedUrl , storageKey);
         }   
