@@ -12,8 +12,6 @@ import com.codex.filestorage.dto.FileUploadResponseDto;
 import com.codex.filestorage.entity.Organization;
 import com.codex.filestorage.entity.User;
 import com.codex.filestorage.entity.UserRole;
-import com.codex.filestorage.repository.UserRepository;
-import com.codex.filestorage.repository.OrganizationRepository;
 import com.codex.filestorage.repository.StorageUsageRepository;
 import com.codex.filestorage.entity.FileMetaData;
 import com.codex.filestorage.entity.Membership;
