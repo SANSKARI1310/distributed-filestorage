@@ -1,4 +1,4 @@
-package com.example.demo.filter;
+package com.example.demo.fair;
 
 import java.time.Instant;
 import reactor.core.publisher.Mono;
@@ -33,6 +33,6 @@ public class QueuedTenantRequest {
 
     public void admit()
     {
-        return admissionSignal.tryEmitEmpty();
+        admissionSignal.tryEmitEmpty();
     }
 }

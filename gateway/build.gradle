@@ -1,6 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.5'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.example'
@@ -14,25 +15,26 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' } // Added to ensure Cloud BOM resolves
+}
+
+ext {
+    set('springCloudVersion', "2025.1.2")
 }
 
 dependencies {
-    // Hardcoded versions that successfully bypassed the resolution error earlier
-    implementation 'org.springframework.cloud:spring-cloud-starter-gateway:4.1.0'
-    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer:4.1.0'
-    
-    // This provides the missing Netty classes that caused the crash earlier
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway:4.1.1'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer:4.1.1'
 
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
-    
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:1.18.36'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
-    testAnnotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+// 3. Removed the legacy dependencyManagement block as platform() handles it cleanly
