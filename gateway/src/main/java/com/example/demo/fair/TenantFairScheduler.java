@@ -2,11 +2,9 @@ package com.example.demo.fair;
 
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
-import com.example.demo.fair.TenantQueueManager;
 import java.util.concurrent.ConcurrentHashMap;   
 import java.util.Comparator;   
 
@@ -18,13 +16,15 @@ public class TenantFairScheduler {
     private int deficit ;
     private final TenantQueueManager queueManager;
     private final TenantSchedulingState tenantSchedule;
+    private final TenantWeightResolver tenantWeight;
 
     private final Map<String, TenantSchedulingState> tenantStates =
             new ConcurrentHashMap<>();
 
-    public TenantFairScheduler(TenantQueueManager queueManager , TenantSchedulingState tenantSchedule) {
+    public TenantFairScheduler(TenantQueueManager queueManager , TenantSchedulingState tenantSchedule , TenantWeightResolver tenantWeight) {
         this.queueManager = queueManager;
         this.tenantSchedule=tenantSchedule;
+        this.tenantWeight = tenantWeight;
         this.deficit=0;
     }
 
@@ -51,7 +51,7 @@ public class TenantFairScheduler {
         schedulerThread.start();
     }
 
-    private void scheduleRound() {
+    public void scheduleRound() {
 
         List<String> activeTenants = queueManager.getActiveTenants()
                 .stream()
@@ -88,14 +88,9 @@ public class TenantFairScheduler {
 
     private TenantSchedulingState createTenantState(String tenantId) {
 
-        int weight = getWeightForTenant(tenantId);
+        int weight = tenantWeight.getWeight(tenantId);
         tenantSchedule.addQuantum(BASE_QUANTUM);
         return new TenantSchedulingState(weight,deficit);
-    }
-
-    private int getWeightForTenant(String tenantId) {
-
-        return 1; //for now 1 only for all 
     }
 
 }

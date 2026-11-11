@@ -1,7 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.1.1'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.3.4' // Upgraded to fix the bootJar API crash
 }
 
 group = 'com.example'
@@ -15,26 +14,33 @@ java {
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' } // Added to ensure Cloud BOM resolves
 }
 
 ext {
-    set('springCloudVersion', "2025.1.2")
+    set('springCloudVersion', "2023.0.3") // Matching stable cloud version for Boot 3.3.x
 }
 
 dependencies {
-    implementation 'org.springframework.cloud:spring-cloud-starter-gateway:4.1.1'
-    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer:4.1.1'
+    // 1. Spring Boot BOM: Resolves versions for core webflux and test starters
+    implementation platform("org.springframework.boot:spring-boot-dependencies:3.3.4")
+    
+    // 2. Spring Cloud BOM: Resolves versions for gateway and loadbalancer
+    implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+
+    // 3. Dependencies (now fully managed without the broken plugin)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
     testCompileOnly 'org.projectlombok:lombok:1.18.36'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-// 3. Removed the legacy dependencyManagement block as platform() handles it cleanly
+tasks.named('test') {
+    useJUnitPlatform()
+}
