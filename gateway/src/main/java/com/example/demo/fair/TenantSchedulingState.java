@@ -22,7 +22,7 @@ public class TenantSchedulingState {
     }
     public void addQuantum(int baseQuantum)
     {
-        deficit = baseQuantum * weight;
+        deficit += baseQuantum * weight;
     }
     public boolean canServe(int request)
     {

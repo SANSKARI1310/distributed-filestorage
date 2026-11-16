@@ -15,15 +15,13 @@ public class TenantFairScheduler {
     private static final int REQUEST_COST = 1;
     private int deficit ;
     private final TenantQueueManager queueManager;
-    private final TenantSchedulingState tenantSchedule;
     private final TenantWeightResolver tenantWeight;
 
     private final Map<String, TenantSchedulingState> tenantStates =
             new ConcurrentHashMap<>();
 
-    public TenantFairScheduler(TenantQueueManager queueManager , TenantSchedulingState tenantSchedule , TenantWeightResolver tenantWeight) {
+    public TenantFairScheduler(TenantQueueManager queueManager , TenantWeightResolver tenantWeight) {
         this.queueManager = queueManager;
-        this.tenantSchedule=tenantSchedule;
         this.tenantWeight = tenantWeight;
         this.deficit=0;
     }
@@ -89,7 +87,6 @@ public class TenantFairScheduler {
     private TenantSchedulingState createTenantState(String tenantId) {
 
         int weight = tenantWeight.getWeight(tenantId);
-        tenantSchedule.addQuantum(BASE_QUANTUM);
         return new TenantSchedulingState(weight,deficit);
     }
 

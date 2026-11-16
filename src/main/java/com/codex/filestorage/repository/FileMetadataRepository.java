@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 @Repository 
 public interface FileMetadataRepository extends JpaRepository<FileMetaData, UUID> {
     
-    Optional<FileMetaData> findByIdAndOrganizationIdAndIsDeletedFalse(UUID id, UUID organizationId);
-    Optional<FileMetaData> findByStorageKeyAndOrganizationId(UUID organizationId, String storageKey);
-    Page<FileMetaData> findAllByOrganizationIdAndIsDeletedFalse(UUID organizationId, Pageable pageable);
+    Optional<FileMetaData> findByIdAndOrganizationId_IdAndIsDeletedFalse(UUID id, UUID organizationId);
+    Optional<FileMetaData> findByStorageKeyAndOrganizationId_Id(UUID organizationId, String storageKey);
+    Page<FileMetaData> findAllByOrganizationId_IdAndIsDeletedFalse(UUID organizationId, Pageable pageable);
 }

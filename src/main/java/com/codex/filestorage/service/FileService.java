@@ -93,7 +93,7 @@ public class FileService {
     public Page<FileResponseSummaryDto> getFiles(UUID organizationId, UUID userId ,Pageable pageable) {
 
         validateMembership(organizationId, userId, UserRole.READER);
-        return fileMetaDataRepository.findAllByOrganizationIdAndIsDeletedFalse(organizationId, pageable)
+        return fileMetaDataRepository.findAllByOrganizationId_IdAndIsDeletedFalse(organizationId, pageable)
             .map(file -> new FileResponseSummaryDto(
                 file.getId(),
                 file.getFileName(),
