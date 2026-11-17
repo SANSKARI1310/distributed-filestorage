@@ -11,6 +11,8 @@ import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.Http.Method;
 import io.minio.RemoveObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 
 
 @Service
@@ -78,5 +80,27 @@ public class MinioService {
                 throw new RuntimeException("Failed to delete file", e);
             }
         }
+
+        public boolean objectExists(String storageKey) {
+            try {
+                minioClient.statObject(
+                    StatObjectArgs.builder()
+                        .bucket(minioProperties.getBucketName())
+                        .object(storageKey)
+                        .build()
+                );
+
+                return true;
+            } catch (io.minio.errors.ErrorResponseException e) {
+                if ("NoSuchKey".equals(e.errorResponse().code())) {
+                    return false;
+                }
+
+                throw new RuntimeException("Could not verify uploaded object", e);
+            } catch (Exception e) {
+                throw new RuntimeException("Could not verify uploaded object", e);
+           }
+         }
+
     
 }

@@ -12,8 +12,13 @@ import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(
+    name = "scheduler.dwrr.enabled",
+    havingValue = "true"
+)
 public class FairQueueFilter implements GlobalFilter , Ordered {
  
     private final TenantQueueManager queueManager;
