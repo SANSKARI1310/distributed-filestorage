@@ -28,6 +28,29 @@ spring:
       max-history: 7            # Keep 7 days of historical logs
       total-size-cap: 100MB     # Delete oldest logs if the total folder size exceeds 100MB
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        readiness:
+         include: readinessState,db,minio
+
+
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+
 minio:
   url: http://localhost:9000
   access-key: filestorageadmin
