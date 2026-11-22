@@ -3,8 +3,8 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/filestorage
-    username: filestorage
-    password: testlocalDB
+    username:  ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -53,6 +53,6 @@ management:
 
 minio:
   url: http://localhost:9000
-  access-key: filestorageadmin
-  secret-key: testlocalFile
+  access-key: ${MINIO_ROOT_USERNAME}
+  secret-key: ${MINIO_ROOT_PASSOWORD}
   bucket-name: platform-bucket
