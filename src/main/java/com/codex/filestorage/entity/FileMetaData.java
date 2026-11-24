@@ -66,6 +66,12 @@ public class FileMetaData {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
+    @Column(name = "idempotency_key" , length = 255)
+    private String idempotencyKey;
+
+    @Column(name = "request_fingerprint" , length = 255)
+    private String requestFingerprint;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();

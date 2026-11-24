@@ -34,10 +34,12 @@ public class FileController {
     public ResponseEntity<FileUploadResponseDto> initiateUpload(
         @RequestHeader("X-Organization-Id") UUID organizationId,
         @RequestHeader ("X-User-Id") UUID userId,
-        @RequestBody FileUploadRequestDto fileUploadRequestDto
+        @RequestBody FileUploadRequestDto fileUploadRequestDto,
+        @RequestHeader("Idempotency-Key") String idempotencyKey
+
     )
     {
-        FileUploadResponseDto response = fileService.initiateUpload(organizationId, userId, fileUploadRequestDto);
+        FileUploadResponseDto response = fileService.initiateUpload(organizationId, userId, fileUploadRequestDto , idempotencyKey);
         return ResponseEntity.ok()
             .header("X-Handled-By:" ,"node -" + port)
             .body(response);

@@ -6,6 +6,13 @@ spring:
     username:  ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 3000
+      validation-timeout: 1000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   
   jpa:
     hibernate:
@@ -53,6 +60,6 @@ management:
 
 minio:
   url: http://localhost:9000
-  access-key: ${MINIO_ROOT_USERNAME}
+  access-key: ${MINIO_ROOT_USER}
   secret-key: ${MINIO_ROOT_PASSOWORD}
   bucket-name: platform-bucket
