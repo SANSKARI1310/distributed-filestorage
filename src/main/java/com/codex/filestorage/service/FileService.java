@@ -2,8 +2,6 @@ package com.codex.filestorage.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 import com.codex.filestorage.dto.FileResponseSummaryDto;
 import com.codex.filestorage.dto.FileUploadRequestDto;
 import com.codex.filestorage.dto.FileUploadResponseDto;
-import com.codex.filestorage.entity.Organization;
-import com.codex.filestorage.entity.User;
 import com.codex.filestorage.entity.UserRole;
 import com.codex.filestorage.repository.StorageUsageRepository;
 import com.codex.filestorage.entity.FileMetaData;
@@ -21,6 +17,8 @@ import com.codex.filestorage.repository.FileMetadataRepository;
 import com.codex.filestorage.repository.MembershipRepository;
 import com.codex.filestorage.event.FileEventDelete;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
+
 import java.util.UUID;
 
 @Service 
@@ -33,6 +31,7 @@ public class FileService {
     private final MembershipRepository membershipRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final RequestFingerPrintService requestFingerPrintService;
+    private final UploadInitializationService uploadInitService;
     
     private Membership validateMembership(UUID organizationId, UUID userId , UserRole requiredRole) {
         Membership membership = membershipRepository.findByOrganizationId_IdAndUserId_Id(organizationId, userId)
@@ -49,64 +48,44 @@ public class FileService {
         return membership;
     }
     @Transactional 
-    public FileUploadResponseDto initiateUpload(UUID organizationId, UUID userId, FileUploadRequestDto request , String idempotencyKey) 
-        {
-          
-            if(idempotencyKey == null || idempotencyKey.isBlank())
-            {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST , "Idempotency key is required");
+    public FileUploadResponseDto initiateUpload(
+        UUID organizationId,
+        UUID userId,
+        String idempotencyKey,
+        FileUploadRequestDto request    
+    ) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Idempotency-Key header is required");
+        }
+
+        String fingerprint = requestFingerPrintService.generate(request);
+
+        FileMetaData metadata;
+
+        try {
+            metadata = uploadInitService.initialize(
+                    organizationId, userId, idempotencyKey, request);
+        } catch (DataIntegrityViolationException exception) {
+
+            metadata = fileMetaDataRepository
+                    .findByOrganizationId_IdAndIdempotencyKey(
+                            organizationId, idempotencyKey)
+                    .orElseThrow(() -> exception);
+
+            if (!metadata.getRequestFingerprint().equals(fingerprint)) {
+                throw new IllegalStateException(
+                        "Idempotency key reused with different request data");
             }
-            Membership membership = validateMembership(organizationId, userId, UserRole.WRITER);
-            String fingerPrint = requestFingerPrintService.generate(request);
+        }
 
-            var existing = fileMetaDataRepository.findByOrganizationId_IdAndIdempotencyKey(organizationId, idempotencyKey);
+        String uploadUrl = minioService.generatePresignedUrl(
+                metadata.getStorageKey());
 
-            if(existing.isPresent())
-            {
-                FileMetaData fileMetaData = existing.get();
-                if(!fileMetaData.getRequestFingerprint().equals(fingerPrint))
-                {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT , "Idempotency Key mismatched");
-                }
-            
-                String uploadUrl = minioService.generatePresignedUrl(fileMetaData.getStorageKey());
-
-                return new FileUploadResponseDto(fileMetaData.getId() , uploadUrl , fileMetaData.getStorageKey());
-            }
-
-            Organization org = membership.getOrganizationId();
-            User user = membership.getUserId();
-            
-            storageUsageRepository.findById(organizationId).ifPresent(
-                usage-> {
-                    if(usage.getUsedBytes() + request.fileSize() > org.getStorageQuotaBytes())
-                    {
-                        throw new IllegalStateException("Storage quta exceeded for the organization");
-                    }
-                }
-            );
-            
-            storageUsageRepository.incrementUsage(organizationId, request.fileSize());
-
-            String storageKey =  organizationId + "/" + UUID.randomUUID();
-
-
-            FileMetaData fileMetaData = FileMetaData.builder()
-                .organizationId(org)
-                .uploadedById(user)
-                .storageKey(storageKey)
-                .fileName(request.fileName())
-                .fileSize(request.fileSize())
-                .mimeType(request.mimeType())
-                .checksumSha256(request.checksumSha256())
-                .idempotencyKey(idempotencyKey)
-                .requestFingerprint(fingerPrint)
-                .build();
-            FileMetaData saved=  fileMetaDataRepository.save(fileMetaData);
-            UUID fileId = saved.getId();
-            String presignedUrl = minioService.generatePresignedUrl(storageKey);
-            return new FileUploadResponseDto(fileId , presignedUrl , storageKey);
-        }   
+        return new FileUploadResponseDto(
+                metadata.getId(),
+                uploadUrl,
+                metadata.getStorageKey());
+    }
     @Transactional(readOnly = true)
     public String getDownloadUrl(UUID organizationId, UUID userId, UUID fileId) {
 

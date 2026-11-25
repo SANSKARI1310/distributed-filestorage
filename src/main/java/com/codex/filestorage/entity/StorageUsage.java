@@ -11,7 +11,6 @@ import java.util.UUID;
 public class StorageUsage {
     
     @Id 
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private UUID organizationId;
 
     @MapsId 
