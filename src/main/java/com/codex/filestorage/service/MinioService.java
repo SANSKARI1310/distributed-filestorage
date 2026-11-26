@@ -13,6 +13,8 @@ import io.minio.Http.Method;
 import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 
 
 @Service
@@ -61,6 +63,32 @@ public class MinioService {
                     log.error("Error generating download url for key {}", storageKey, e);
                     throw new RuntimeException("Could not generate presigned URl", e);
                 }
+            }
+        }
+
+        public boolean verifyUploadedObject(
+        String storageKey,
+        long expectedSize,
+        String expectedChecksum
+        ) {
+            try {
+                StatObjectResponse stat = minioClient.statObject(
+                        StatObjectArgs.builder()
+                                .bucket(minioProperties.getBucketName())
+                                .object(storageKey)
+                                .build()
+                );
+
+                long actualSize = stat.size();
+
+                String actualChecksum = stat.userMetadata()
+                        .get("x-amz-meta-checksum-sha256").toString();
+
+                return actualSize == expectedSize
+                        && expectedChecksum.equalsIgnoreCase(actualChecksum);
+
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to verify uploaded object", e);
             }
         }
 

@@ -1,6 +1,8 @@
 package com.codex.filestorage.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 
@@ -71,6 +73,11 @@ public class FileMetaData {
 
     @Column(name = "request_fingerprint" , length = 255)
     private String requestFingerprint;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "upload_status", nullable = false, length = 20)
+    @Builder.Default
+    private UploadStatus uploadStatus = UploadStatus.PENDING;       
 
     @PrePersist
     protected void onCreate() {

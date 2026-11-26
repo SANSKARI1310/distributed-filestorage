@@ -39,7 +39,7 @@ public class FileController {
 
     )
     {
-        FileUploadResponseDto response = fileService.initiateUpload(organizationId, userId, fileUploadRequestDto , idempotencyKey);
+        FileUploadResponseDto response = fileService.initiateUpload(organizationId, userId, idempotencyKey ,fileUploadRequestDto );
         return ResponseEntity.ok()
             .header("X-Handled-By:" ,"node -" + port)
             .body(response);
