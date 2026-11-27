@@ -80,5 +80,16 @@ public class FileController {
                 .build();
     }
 
+    @PostMapping("{fileId}/complete")
+    public ResponseEntity<Void> autoComplete(
+        @RequestHeader("X-Organizarion-Id") UUID organizationId ,
+        @RequestHeader("X-User-Id") UUID userId,
+        @PathVariable UUID fileId
+    )
+    {
+            fileService.completeUpload(organizationId, userId, fileId);
+
+            return ResponseEntity.noContent().build();
+    }
 
 }

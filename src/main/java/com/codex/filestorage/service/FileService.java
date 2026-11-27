@@ -2,10 +2,13 @@ package com.codex.filestorage.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+
 import com.codex.filestorage.dto.FileResponseSummaryDto;
 import com.codex.filestorage.dto.FileUploadRequestDto;
 import com.codex.filestorage.dto.FileUploadResponseDto;
@@ -13,12 +16,14 @@ import com.codex.filestorage.entity.UserRole;
 import com.codex.filestorage.repository.StorageUsageRepository;
 import com.codex.filestorage.entity.FileMetaData;
 import com.codex.filestorage.entity.Membership;
+import com.codex.filestorage.entity.UploadStatus;
 import com.codex.filestorage.repository.FileMetadataRepository;
 import com.codex.filestorage.repository.MembershipRepository;
 import com.codex.filestorage.event.FileEventDelete;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.OptionalLong;
 import java.util.UUID;
 
 @Service 
@@ -126,4 +131,89 @@ public class FileService {
         
     }
     
+    public void completeUpload(
+        UUID organizationId,
+        UUID userId,
+        UUID fileId
+    ) {
+        // 1. Validate membership
+        Membership membership = membershipRepository
+            .findByOrganizationId_IdAndUserId_Id(organizationId, userId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "User is not a member"
+            ));
+
+        if (membership.getRole() != UserRole.WRITER
+                && membership.getRole() != UserRole.ADMIN) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Writer role required"
+            );
+        }
+
+        // 2. Find metadata within this organization
+        FileMetaData metadata = fileMetaDataRepository
+            .findByIdAndOrganizationId_IdAndIsDeletedFalse(
+                fileId, organizationId
+            )
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "File not found"
+            ));
+
+        // 3. Idempotent retry: already completed
+        if (metadata.getUploadStatus() == UploadStatus.COMPLETED) {
+            return;
+        }
+
+        if (metadata.getUploadStatus() != UploadStatus.PENDING) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT, "Upload cannot be completed"
+            );
+        }
+
+        // 4. Check object existence and actual size
+        OptionalLong actualSize = minioService.getObjectSizeIfExists(
+            metadata.getStorageKey()
+        );
+
+        if (actualSize.isEmpty()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT, "Uploaded object does not exist"
+            );
+        }
+
+        if (actualSize.getAsLong() != metadata.getFileSize()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT, "Uploaded file size does not match"
+            );
+        }
+
+        // 5. Atomic PENDING -> COMPLETED transition
+        int updated = fileMetaDataRepository.markUploadCompleted(
+            fileId,
+            organizationId,
+            UploadStatus.PENDING,
+            UploadStatus.COMPLETED
+        );
+
+        if (updated == 1) {
+            return;
+        }
+
+        // 6. Another concurrent request may have completed it.
+        FileMetaData latest = fileMetaDataRepository
+            .findByIdAndOrganizationId_IdAndIsDeletedFalse(
+                fileId, organizationId
+            )
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "File not found"
+            ));
+
+        if (latest.getUploadStatus() == UploadStatus.COMPLETED) {
+            return;
+        }
+
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT, "Upload could not be completed"
+        );
+    }
 }

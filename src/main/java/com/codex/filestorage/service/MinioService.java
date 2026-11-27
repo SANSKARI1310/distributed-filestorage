@@ -1,4 +1,5 @@
 package com.codex.filestorage.service;
+import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
@@ -13,9 +14,7 @@ import io.minio.Http.Method;
 import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
-import io.minio.StatObjectArgs;
-import io.minio.StatObjectResponse;
-
+import java.util.OptionalLong;
 
 @Service
 @Slf4j
@@ -45,7 +44,7 @@ public class MinioService {
             }
         }
 
-        public String generateDownloadUrl(String storageKey) {
+    public String generateDownloadUrl(String storageKey) {
             {
                 try
                 {
@@ -66,33 +65,7 @@ public class MinioService {
             }
         }
 
-        public boolean verifyUploadedObject(
-        String storageKey,
-        long expectedSize,
-        String expectedChecksum
-        ) {
-            try {
-                StatObjectResponse stat = minioClient.statObject(
-                        StatObjectArgs.builder()
-                                .bucket(minioProperties.getBucketName())
-                                .object(storageKey)
-                                .build()
-                );
-
-                long actualSize = stat.size();
-
-                String actualChecksum = stat.userMetadata()
-                        .get("x-amz-meta-checksum-sha256").toString();
-
-                return actualSize == expectedSize
-                        && expectedChecksum.equalsIgnoreCase(actualChecksum);
-
-            } catch (Exception e) {
-                throw new RuntimeException("Unable to verify uploaded object", e);
-            }
-        }
-
-        public void deleteFile(String storageKey) {
+    public void deleteFile(String storageKey) {
             try
             {
                 minioClient.removeObject(
@@ -109,7 +82,7 @@ public class MinioService {
             }
         }
 
-        public boolean objectExists(String storageKey) {
+    public boolean objectExists(String storageKey) {
             try {
                 minioClient.statObject(
                     StatObjectArgs.builder()
@@ -120,6 +93,8 @@ public class MinioService {
 
                 return true;
             } catch (io.minio.errors.ErrorResponseException e) {
+
+                String code = e.errorResponse().code();
                 if ("NoSuchKey".equals(e.errorResponse().code())) {
                     return false;
                 }
@@ -129,6 +104,31 @@ public class MinioService {
                 throw new RuntimeException("Could not verify uploaded object", e);
            }
          }
+
+    public OptionalLong getObjectSizeIfExists(String storageKey) {
+            try {
+                StatObjectResponse stat = minioClient.statObject(
+                StatObjectArgs.builder()
+                    .bucket(minioProperties.getBucketName())
+                    .object(storageKey)
+                    .build()
+                );
+
+            return OptionalLong.of(stat.size());
+
+            } catch (io.minio.errors.ErrorResponseException e) {
+                String code = e.errorResponse().code();
+
+                if ("NoSuchKey".equals(code) || "NoSuchObject".equals(code)) {
+                    return OptionalLong.empty();
+                }
+
+                throw new RuntimeException("Could not retrieve object size", e);
+
+         } catch (Exception e) {
+                throw new RuntimeException("Could not retrieve object size", e);
+            }
+        }
 
     
 }
